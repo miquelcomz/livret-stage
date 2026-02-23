@@ -1,0 +1,12 @@
+{
+  "name": "livret-stage-cap",
+  "version": "1.0.0",
+  "description": "Application web pour le livret de stage CAP",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
