@@ -40,7 +40,7 @@ app.post('/api/login', (req, res) => {
         }
     }
     const e = data[id];
-    res.json({ success: true, eleveId: id, lastSaved: e.lastSaved, hasData: Object.keys(e.livret).length > 0 });
+    res.json({ success: true, eleveId: id, lastSaved: e.lastSaved, hasData: Object.keys(e.livret || {}).length > 0 });
 });
 
 app.post('/api/save/:id', (req, res) => {
