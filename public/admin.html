@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espace Professeur - Livrets de Stage</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Nunito', sans-serif; background: #f0f2f5; min-height: 100vh; padding: 20px; color: #2C3E50; }
+        .card { background: white; border-radius: 16px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        h1 { font-family: 'Fredoka', sans-serif; font-size: 2em; color: #4ECDC4; margin-bottom: 5px; }
+        h2 { font-family: 'Fredoka', sans-serif; font-size: 1.5em; color: #2C3E50; margin-bottom: 15px; }
+        .login-form { max-width: 400px; margin: 60px auto; }
+        label { display: block; font-weight: 700; margin-bottom: 6px; color: #555; }
+        input[type="password"], input[type="text"] { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-family: 'Nunito', sans-serif; font-size: 1em; margin-bottom: 15px; }
+        input:focus { outline: none; border-color: #4ECDC4; }
+        button { padding: 12px 24px; background: linear-gradient(135deg, #4ECDC4, #38B2AC); color: white; border: none; border-radius: 10px; font-family: 'Fredoka', sans-serif; font-size: 1.1em; cursor: pointer; transition: transform 0.2s; }
+        button:hover { transform: translateY(-2px); }
+        button.danger { background: linear-gradient(135deg, #FF6B6B, #E74C3C); }
+        .error { color: #E74C3C; font-size: 0.9em; margin-bottom: 10px; }
+        .table { width: 100%; border-collapse: collapse; }
+        .table th { background: #f8f9fa; padding: 12px 15px; text-align: left; font-weight: 700; border-bottom: 2px solid #eee; }
+        .table td { padding: 12px 15px; border-bottom: 1px solid #f0f0f0; }
+        .table tr:hover td { background: #fafafa; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: 700; }
+        .badge-green { background: #E8F5E9; color: #27AE60; }
+        .badge-gray { background: #f0f0f0; color: #888; }
+        .btn-small { padding: 6px 14px; font-size: 0.9em; border-radius: 8px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: linear-gradient(135deg, #4ECDC4, #38B2AC); color: white; padding: 20px; border-radius: 12px; text-align: center; }
+        .stat-card .number { font-family: 'Fredoka', sans-serif; font-size: 2.5em; }
+        .stat-card .label { font-size: 0.85em; opacity: 0.9; }
+        #adminPanel { display: none; }
+        #loginPanel { display: block; }
+        .search-bar { padding: 10px 15px; border: 2px solid #ddd; border-radius: 10px; font-family: 'Nunito', sans-serif; font-size: 1em; width: 100%; max-width: 300px; margin-bottom: 15px; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<!-- PAGE DE CONNEXION -->
+<div id="loginPanel">
+    <div class="login-form">
+        <div class="card">
+            <h1>🔐 Espace Professeur</h1>
+            <p style="color:#888;margin-bottom:25px;">Accès réservé aux enseignants</p>
+            <div class="error" id="loginError" style="display:none;"></div>
+            <label>Mot de passe :</label>
+            <input type="password" id="adminPassword" placeholder="Mot de passe professeur" onkeypress="if(event.key==='Enter')login()">
+            <button onclick="login()">🚀 Se connecter</button>
+            <div style="margin-top:15px;"><a href="/" style="color:#aaa;font-size:0.85em;">← Retour à l'accès élève</a></div>
+        </div>
+    </div>
+</div>
+
+<!-- PANNEAU ADMIN -->
+<div id="adminPanel">
+    <div class="topbar">
+        <div><h1>📊 Tableau de bord</h1><p style="color:#888;">Suivi des livrets de stage</p></div>
+        <button onclick="logout()">🚪 Déconnexion</button>
+    </div>
+
+    <div class="stats" id="statsRow"></div>
+
+    <div class="card">
+        <h2>👨‍🎓 Liste des élèves</h2>
+        <input type="text" class="search-bar" placeholder="🔍 Rechercher un élève..." oninput="filterEleves(this.value)">
+        <table class="table" id="elevesTable">
+            <thead>
+                <tr>
+                    <th>Élève</th>
+                    <th>Classe</th>
+                    <th>Code</th>
+                    <th>Statut</th>
+                    <th>Dernière sauvegarde</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="elevesBody">
+                <tr><td colspan="6" style="text-align:center;color:#aaa;padding:30px;">Chargement...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let adminPassword = '';
+    let allEleves = [];
+
+    async function login() {
+        const pwd = document.getElementById('adminPassword').value;
+        const errDiv = document.getElementById('loginError');
+        try {
+            const res = await fetch('/api/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: pwd })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                errDiv.textContent = '❌ ' + data.error;
+                errDiv.style.display = 'block';
+                return;
+            }
+            adminPassword = pwd;
+            document.getElementById('loginPanel').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+            loadEleves();
+        } catch {
+            errDiv.textContent = '❌ Erreur de connexion';
+            errDiv.style.display = 'block';
+        }
+    }
+
+    function logout() {
+        adminPassword = '';
+        document.getElementById('loginPanel').style.display = 'block';
+        document.getElementById('adminPanel').style.display = 'none';
+        document.getElementById('adminPassword').value = '';
+    }
+
+    async function loadEleves() {
+        try {
+            const res = await fetch('/api/admin/eleves', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: adminPassword })
+            });
+            const data = await res.json();
+            allEleves = data.eleves || [];
+            renderStats(allEleves);
+            renderEleves(allEleves);
+        } catch {
+            document.getElementById('elevesBody').innerHTML = '<tr><td colspan="6" style="color:red;text-align:center;">Erreur de chargement</td></tr>';
+        }
+    }
+
+    function renderStats(eleves) {
+        const avecData = eleves.filter(e => e.hasData).length;
+        const classes = [...new Set(eleves.map(e => e.classe))].length;
+        document.getElementById('statsRow').innerHTML = `
+            <div class="stat-card"><div class="number">${eleves.length}</div><div class="label">Élèves inscrits</div></div>
+            <div class="stat-card" style="background:linear-gradient(135deg,#FF6B6B,#E74C3C)"><div class="number">${avecData}</div><div class="label">Livrets en cours</div></div>
+            <div class="stat-card" style="background:linear-gradient(135deg,#FFE66D,#FFC107);color:#333"><div class="number">${classes}</div><div class="label">Classes</div></div>
+        `;
+    }
+
+    function renderEleves(eleves) {
+        const tbody = document.getElementById('elevesBody');
+        if (eleves.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:30px;">Aucun élève inscrit</td></tr>';
+            return;
+        }
+        tbody.innerHTML = eleves.map(e => {
+            const date = e.lastSaved ? new Date(e.lastSaved).toLocaleDateString('fr-FR') + ' ' + new Date(e.lastSaved).toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'}) : 'Jamais';
+            const badge = e.hasData ? '<span class="badge badge-green">✅ En cours</span>' : '<span class="badge badge-gray">⏳ Vide</span>';
+            return `<tr>
+                <td><strong>${e.prenom} ${e.nom}</strong></td>
+                <td>${e.classe}</td>
+                <td><code>${e.id}</code></td>
+                <td>${badge}</td>
+                <td style="color:#888;font-size:0.9em;">${date}</td>
+                <td><button class="btn-small" onclick="voirLivret('${e.id}')">👁️ Voir</button></td>
+            </tr>`;
+        }).join('');
+    }
+
+    function filterEleves(query) {
+        const q = query.toLowerCase();
+        const filtered = allEleves.filter(e =>
+            e.nom.toLowerCase().includes(q) ||
+            e.prenom.toLowerCase().includes(q) ||
+            e.classe.toLowerCase().includes(q) ||
+            e.id.toLowerCase().includes(q)
+        );
+        renderEleves(filtered);
+    }
+
+    async function voirLivret(eleveId) {
+        try {
+            const res = await fetch(`/api/admin/eleve/${eleveId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: adminPassword })
+            });
+            const data = await res.json();
+            if (!res.ok) { alert('Erreur: ' + data.error); return; }
+            
+            const e = data.eleve;
+            const inputs = e.livret.inputs || {};
+            
+            // Ouvrir une nouvelle fenêtre avec le résumé
+            const win = window.open('', '_blank');
+            win.document.write(`
+                <html><head><title>Livret de ${e.prenom} ${e.nom}</title>
+                <style>body{font-family:sans-serif;padding:30px;max-width:800px;margin:0 auto;}
+                h1{color:#FF6B6B;}h2{color:#4ECDC4;margin-top:25px;border-bottom:2px solid #eee;padding-bottom:5px;}
+                .field{background:#f9f9f9;padding:10px;margin:5px 0;border-radius:6px;}
+                .label{font-weight:700;color:#555;font-size:0.85em;}
+                .value{color:#333;}
+                @media print{button{display:none!important;}}
+                </style></head>
+                <body>
+                <button onclick="window.print()" style="background:#FF6B6B;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;margin-bottom:20px;">🖨️ Imprimer</button>
+                <h1>📋 Livret de ${e.prenom} ${e.nom}</h1>
+                <p>Classe : <strong>${e.classe}</strong> | Dernière mise à jour : <strong>${e.lastSaved ? new Date(e.lastSaved).toLocaleString('fr-FR') : 'N/A'}</strong></p>
+                <h2>📋 Informations générales</h2>
+                ${Object.entries(inputs).filter(([k,v]) => v && !k.startsWith('comp')).map(([k,v]) => 
+                    `<div class="field"><span class="label">${k}</span><br><span class="value">${v === true ? '✅ Oui' : v === false ? '' : v}</span></div>`
+                ).join('')}
+                <h2>🏆 Compétences cochées</h2>
+                ${Object.keys(e.livret.actions || {}).map(a => `<div class="field">✅ ${a}</div>`).join('')}
+                <h2>✍️ Réponses aux questions</h2>
+                ${Object.entries(inputs).filter(([k,v]) => v && k.startsWith('comp')).map(([k,v]) => 
+                    `<div class="field"><span class="label">${k}</span><br><span class="value">${v === true ? '✅ Coché' : v}</span></div>`
+                ).join('')}
+                </body></html>
+            `);
+        } catch {
+            alert('Erreur lors du chargement du livret');
+        }
+    }
+
+    document.addEventListener('keypress', e => {
+        if (e.key === 'Enter' && document.getElementById('loginPanel').style.display !== 'none') login();
+    });
+</script>
+</body>
+</html>

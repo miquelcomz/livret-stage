@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Livret de Stage - Connexion</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 50%, #FFE66D 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 460px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 2em;
+            color: #FF6B6B;
+            margin-bottom: 5px;
+        }
+        .logo p {
+            color: #888;
+            font-size: 0.9em;
+        }
+        .emoji-big {
+            font-size: 3em;
+            display: block;
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            font-weight: 700;
+            color: #2C3E50;
+            margin-bottom: 6px;
+            font-size: 0.95em;
+        }
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #E0E0E0;
+            border-radius: 10px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 1em;
+            margin-bottom: 18px;
+            transition: border-color 0.2s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #FF6B6B;
+        }
+        .hint {
+            background: #FFF8E7;
+            border: 2px solid #FFE66D;
+            border-radius: 10px;
+            padding: 12px 15px;
+            font-size: 0.85em;
+            color: #555;
+            margin-bottom: 20px;
+        }
+        .hint strong { color: #FF6B6B; }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,107,107,0.4);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .error {
+            background: #FFE8E8;
+            border: 2px solid #FF6B6B;
+            border-radius: 10px;
+            padding: 12px 15px;
+            color: #CC0000;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .admin-link {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid #F0F0F0;
+        }
+        .admin-link a {
+            color: #aaa;
+            text-decoration: none;
+            font-size: 0.85em;
+        }
+        .admin-link a:hover { color: #FF6B6B; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo">
+            <span class="emoji-big">🍽️</span>
+            <h1>Mon Livret de Stage</h1>
+            <p>CAP Commercialisation et Services en HCR</p>
+        </div>
+
+        <div class="hint">
+            <strong>📌 Premier accès ?</strong> Remplissez le formulaire ci-dessous et choisissez un code personnel (ex: vos initiales + année de naissance). Notez-le bien, il vous permettra de retrouver votre livret !
+        </div>
+
+        <div class="error" id="errorMsg"></div>
+
+        <label>👤 Prénom</label>
+        <input type="text" id="prenom" placeholder="Votre prénom" autocomplete="given-name">
+
+        <label>👤 Nom</label>
+        <input type="text" id="nom" placeholder="Votre nom de famille" autocomplete="family-name">
+
+        <label>📚 Classe</label>
+        <input type="text" id="classe" placeholder="Ex: CAP1, CAP2...">
+
+        <label>🔑 Votre code personnel</label>
+        <input type="text" id="code" placeholder="Ex: ML2008, JD07..." maxlength="20">
+
+        <button onclick="connexion()" id="btn">
+            🚀 Accéder à mon livret
+        </button>
+
+        <div class="admin-link">
+            <a href="/admin.html">🔐 Accès professeur</a>
+        </div>
+    </div>
+
+    <script>
+        async function connexion() {
+            const nom = document.getElementById('nom').value.trim();
+            const prenom = document.getElementById('prenom').value.trim();
+            const classe = document.getElementById('classe').value.trim();
+            const code = document.getElementById('code').value.trim();
+            const errDiv = document.getElementById('errorMsg');
+            const btn = document.getElementById('btn');
+
+            errDiv.style.display = 'none';
+
+            if (!nom || !prenom || !classe || !code) {
+                errDiv.textContent = '⚠️ Veuillez remplir tous les champs.';
+                errDiv.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Connexion...';
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nom, prenom, classe, code })
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    errDiv.textContent = '❌ ' + data.error;
+                    errDiv.style.display = 'block';
+                    btn.disabled = false;
+                    btn.textContent = '🚀 Accéder à mon livret';
+                    return;
+                }
+
+                // Sauvegarder l'ID en session
+                sessionStorage.setItem('eleveId', data.eleveId);
+                sessionStorage.setItem('eleveNom', prenom + ' ' + nom);
+                window.location.href = '/livret.html';
+
+            } catch (e) {
+                errDiv.textContent = '❌ Erreur de connexion au serveur.';
+                errDiv.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = '🚀 Accéder à mon livret';
+            }
+        }
+
+        // Permettre de valider avec Entrée
+        document.addEventListener('keypress', e => {
+            if (e.key === 'Enter') connexion();
+        });
+    </script>
+</body>
+</html>

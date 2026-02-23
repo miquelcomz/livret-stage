@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Livret de Stage - CAP Service</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #FF6B6B; --secondary: #4ECDC4; --accent: #FFE66D;
+            --success: #95E1D3; --bg: #FFFFFF; --text: #2C3E50; --shadow: rgba(0,0,0,0.1);
+        }
+        body { font-family: 'Nunito', sans-serif; background: white; color: var(--text); padding: 20px; min-height: 100vh; }
+        .container { max-width: 900px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 10px 30px var(--shadow); overflow: hidden; border: 3px solid var(--primary); }
+        .header { background: linear-gradient(135deg, var(--primary) 0%, #FF8E53 100%); padding: 40px 30px; text-align: center; position: relative; overflow: hidden; }
+        .header::before { content: '🍽️'; position: absolute; font-size: 150px; opacity: 0.15; right: -30px; top: -30px; transform: rotate(-15deg); }
+        .header h1 { font-family: 'Fredoka', sans-serif; color: white; font-size: 2.5em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
+        .header p { color: rgba(255,255,255,0.95); font-size: 1.2em; font-weight: 600; }
+        .topbar { background: #f8f9fa; border-bottom: 2px solid #eee; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 0.9em; }
+        .topbar .user-info { color: #555; font-weight: 600; }
+        .topbar .save-status { color: #888; font-size: 0.85em; }
+        .topbar .save-status.saved { color: #27AE60; }
+        .topbar .print-btn { background: var(--secondary); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-family: 'Nunito', sans-serif; font-weight: 700; cursor: pointer; font-size: 0.9em; }
+        .topbar .logout-btn { background: #eee; color: #555; border: none; padding: 8px 14px; border-radius: 8px; font-family: 'Nunito', sans-serif; font-weight: 700; cursor: pointer; font-size: 0.9em; margin-left: 8px; }
+        .info-section { background: white; padding: 30px; margin: 20px; border-radius: 15px; border: 3px solid var(--accent); }
+        .info-section h2 { font-family: 'Fredoka', sans-serif; color: var(--text); margin-bottom: 20px; font-size: 1.8em; display: flex; align-items: center; gap: 10px; }
+        .info-grid { display: grid; gap: 15px; }
+        .info-item { background: #FFFBF0; padding: 15px; border-radius: 12px; border: 2px solid rgba(255,230,109,0.5); }
+        .info-item label { display: block; font-weight: 700; color: var(--primary); margin-bottom: 8px; font-size: 0.95em; }
+        .info-item input, .info-item textarea { width: 100%; padding: 10px; border: 2px solid #E0E0E0; border-radius: 8px; font-family: 'Nunito', sans-serif; font-size: 1em; transition: all 0.3s; }
+        .info-item textarea { min-height: 60px; resize: vertical; }
+        .info-item input:focus, .info-item textarea:focus { outline: none; border-color: var(--primary); transform: scale(1.02); }
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; }
+        .checkbox-item { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .checkbox-item input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; }
+        .photo-upload-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; background: white; border: 2px dashed var(--secondary); border-radius: 10px; cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 0.9em; font-weight: 600; color: var(--secondary); transition: all 0.3s; margin-top: 10px; }
+        .photo-upload-btn:hover { background: #F0FDFA; border-color: #38B2AC; transform: scale(1.02); }
+        .photo-upload-btn input[type="file"] { display: none; }
+        .photo-preview-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 10px; }
+        .photo-preview { position: relative; width: 100%; padding-top: 100%; border: 2px solid #E0E0E0; background: #F8F9FA; overflow: hidden; border-radius: 10px; }
+        .photo-preview img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+        .photo-delete { position: absolute; top: 5px; right: 5px; background: rgba(255,255,255,0.95); border: 2px solid var(--primary); width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.1em; font-weight: 700; color: var(--primary); transition: all 0.3s; }
+        .photo-delete:hover { background: var(--primary); color: white; transform: scale(1.1); }
+        .competence-section { margin: 20px; padding: 25px; background: white; border-radius: 15px; border: 3px solid var(--secondary); position: relative; }
+        .competence-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; cursor: pointer; user-select: none; }
+        .competence-number { background: linear-gradient(135deg, var(--secondary), #38B2AC); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Fredoka', sans-serif; font-size: 1.5em; font-weight: 700; box-shadow: 0 4px 10px rgba(78,205,196,0.3); }
+        .competence-title { flex: 1; }
+        .competence-title h3 { font-family: 'Fredoka', sans-serif; font-size: 1.6em; color: var(--text); }
+        .toggle-icon { font-size: 1.5em; transition: transform 0.3s; color: var(--secondary); }
+        .competence-content { max-height: 5000px; overflow: hidden; transition: max-height 0.3s ease; }
+        .competence-content.collapsed { max-height: 0; }
+        .action-grid { display: grid; gap: 15px; margin-top: 20px; }
+        .action-card { background: white; padding: 20px; border-radius: 12px; border: 2px solid #E8E8E8; transition: all 0.3s; }
+        .action-card:hover { box-shadow: 0 5px 15px var(--shadow); border-color: var(--secondary); }
+        .action-card.checked { background: #F0FDF4; border-color: var(--success); border-width: 3px; }
+        .action-header { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
+        .action-icon { font-size: 2.5em; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; background: #F8F9FA; border-radius: 12px; border: 2px solid #E0E0E0; flex-shrink: 0; }
+        .action-card.checked .action-icon { background: linear-gradient(135deg, #E8F5E9, #C8E6C9); border-color: var(--success); }
+        .action-text { flex: 1; font-size: 1.1em; font-weight: 600; color: var(--text); }
+        .custom-checkbox { width: 40px; height: 40px; border: 3px solid #ddd; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: white; transition: all 0.3s; cursor: pointer; flex-shrink: 0; }
+        .action-card.checked .custom-checkbox { background: linear-gradient(135deg, var(--success), #7FDBCA); border-color: var(--success); }
+        .action-card.checked .custom-checkbox::after { content: '✓'; color: white; font-size: 1.5em; font-weight: 700; }
+        .emoji-rating { display: flex; gap: 10px; margin-top: 10px; padding-left: 85px; }
+        .emoji-btn { font-size: 2em; cursor: pointer; padding: 10px; border-radius: 10px; transition: all 0.3s; background: white; border: 2px solid #ddd; }
+        .emoji-btn:hover { transform: scale(1.2); }
+        .emoji-btn.selected { background: var(--accent); border-color: #FFC107; transform: scale(1.3); }
+        .conditional-field { margin-top: 15px; padding-left: 85px; display: none; }
+        .conditional-field.show { display: block; }
+        .conditional-field input { width: 100%; max-width: 300px; padding: 10px; border: 2px solid #E0E0E0; border-radius: 8px; font-family: 'Nunito', sans-serif; font-size: 1em; }
+        .subsection-title { font-family: 'Fredoka', sans-serif; font-size: 1.2em; color: var(--secondary); margin-top: 25px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #E0E0E0; }
+        .save-btn { background: linear-gradient(135deg, var(--primary), #E74C3C); color: white; border: none; padding: 18px 40px; border-radius: 15px; font-family: 'Fredoka', sans-serif; font-size: 1.2em; font-weight: 700; cursor: pointer; margin: 30px; display: block; width: calc(100% - 60px); box-shadow: 0 5px 15px rgba(255,107,107,0.3); transition: all 0.3s; }
+        .save-btn:hover { transform: translateY(-2px); box-shadow: 0 7px 20px rgba(255,107,107,0.4); }
+        @media print {
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; border: none; }
+            .save-btn, .photo-upload-btn, .photo-delete, .topbar { display: none !important; }
+            .competence-content { max-height: none !important; }
+        }
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.8em; }
+            .action-header { flex-direction: column; text-align: center; }
+            .emoji-rating, .conditional-field { padding-left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar" id="topbar">
+        <span class="user-info" id="userInfo">👤 Chargement...</span>
+        <span class="save-status" id="saveStatus">⏳ Chargement de vos données...</span>
+        <div>
+            <button class="print-btn" onclick="window.print()">🖨️ Imprimer</button>
+            <button class="logout-btn" onclick="deconnexion()">🚪 Déconnexion</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🍽️ Mon Livret de Stage</h1>
+            <p>CAP Commercialisation et Services en Hôtel-Café-Restaurant</p>
+        </div>
+        
+        <div class="info-section">
+            <h2>📋 Mes informations</h2>
+            <div class="info-grid">
+                <div class="info-item"><label>👤 Prénom et Nom :</label><input type="text" id="studentName" placeholder="Votre nom" data-save="student-name"></div>
+                <div class="info-item"><label>📚 Classe :</label><input type="text" id="studentClass" placeholder="Votre classe" data-save="student-class"></div>
+                <div class="info-item"><label>📅 Date de début du stage :</label><input type="date" id="startDate" data-save="start-date"></div>
+                <div class="info-item"><label>📅 Date de fin du stage :</label><input type="date" id="endDate" data-save="end-date"></div>
+            </div>
+        </div>
+        
+        <div class="info-section">
+            <h2>🏢 Mon entreprise d'accueil</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>🍽️ Nom de l'établissement :</label>
+                    <input type="text" id="companyName" placeholder="Nom du restaurant" data-save="company-name">
+                    <label class="photo-upload-btn">📸 Ajouter une photo<input type="file" accept="image/*" onchange="handlePhotoUpload(event, 'company-name')"></label>
+                    <div class="photo-preview-container" id="photos-company-name"></div>
+                </div>
+                <div class="info-item">
+                    <label>🏪 Type d'établissement :</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item"><input type="checkbox" data-save="type-resto-trad"> Restaurant traditionnel</label>
+                        <label class="checkbox-item"><input type="checkbox" data-save="type-brasserie"> Brasserie</label>
+                        <label class="checkbox-item"><input type="checkbox" data-save="type-hotel"> Hôtel-restaurant</label>
+                        <label class="checkbox-item"><input type="checkbox" data-save="type-gastro"> Restaurant gastronomique</label>
+                        <label class="checkbox-item"><input type="checkbox" data-save="type-cafe"> Café</label>
+                    </div>
+                    <input type="text" placeholder="Autre type..." data-save="type-autre" style="margin-top: 10px;">
+                </div>
+                <div class="info-item"><label>📍 Adresse :</label><input type="text" placeholder="Adresse complète" data-save="address"></div>
+                <div class="info-item">
+                    <label>👨‍🏫 Nom de mon tuteur/tutrice :</label>
+                    <input type="text" placeholder="Nom du tuteur" data-save="tutor-name">
+                    <label class="photo-upload-btn">📸 Ajouter une photo<input type="file" accept="image/*" onchange="handlePhotoUpload(event, 'tutor')"></label>
+                    <div class="photo-preview-container" id="photos-tutor"></div>
+                </div>
+                <div class="info-item"><label>📞 Téléphone de l'établissement :</label><input type="tel" placeholder="Numéro de téléphone" data-save="phone"></div>
+            </div>
+        </div>
+        
+        <div class="info-section">
+            <h2>ℹ️ Informations pratiques</h2>
+            <div class="info-grid">
+                <div class="info-item"><label>🚗 Mon moyen de transport :</label><input type="text" placeholder="Bus, voiture, vélo..." data-save="transport"></div>
+                <div class="info-item">
+                    <label>👔 Tenue réglementaire imposée :</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item"><input type="checkbox" data-save="uniform-yes"> Oui</label>
+                        <label class="checkbox-item"><input type="checkbox" data-save="uniform-no"> Non</label>
+                    </div>
+                    <input type="text" placeholder="Si oui, laquelle ?" data-save="uniform-desc" style="margin-top: 10px;">
+                </div>
+                <div class="info-item"><label>🪑 Nombre de couverts en salle :</label><input type="text" placeholder="Ex: 50" data-save="couverts"></div>
+                <div class="info-item">
+                    <label>👥 Nombre de personnel en salle :</label>
+                    <input type="text" placeholder="Ex: 3" data-save="staff-salle">
+                    <label class="photo-upload-btn">📸 Ajouter une photo<input type="file" accept="image/*" onchange="handlePhotoUpload(event, 'staff-salle')"></label>
+                    <div class="photo-preview-container" id="photos-staff-salle"></div>
+                </div>
+                <div class="info-item">
+                    <label>👨‍🍳 Nombre de personnel en cuisine :</label>
+                    <input type="text" placeholder="Ex: 2" data-save="staff-cuisine">
+                    <label class="photo-upload-btn">📸 Ajouter une photo<input type="file" accept="image/*" onchange="handlePhotoUpload(event, 'staff-cuisine')"></label>
+                    <div class="photo-preview-container" id="photos-staff-cuisine"></div>
+                </div>
+                <div class="info-item"><label>⏰ Horaires d'ouverture :</label><input type="text" placeholder="Ex: 12h-14h / 19h-22h" data-save="hours"></div>
+                <div class="info-item">
+                    <label>⭐ Spécialités de la maison :</label>
+                    <input type="text" placeholder="Les plats signatures" data-save="specialties">
+                    <label class="photo-upload-btn">📸 Ajouter une photo<input type="file" accept="image/*" onchange="handlePhotoUpload(event, 'specialties')"></label>
+                    <div class="photo-preview-container" id="photos-specialties"></div>
+                </div>
+                <div class="info-item"><label>💭 Ce que j'ai remarqué le premier jour :</label><textarea placeholder="Mes premières impressions..." data-save="first-day"></textarea></div>
+            </div>
+        </div>
+
+        <!-- COMPÉTENCE 1 -->
+        <div class="competence-section">
+            <div class="competence-header" onclick="toggleCompetence(1)">
+                <div class="competence-number">1</div>
+                <div class="competence-title"><h3>Compétences sociales et comportementales</h3></div>
+                <div class="toggle-icon" id="toggle1">▼</div>
+            </div>
+            <div class="competence-content" id="comp1-content">
+                <div class="action-grid">
+                    <div class="subsection-title">⏰ Ponctualité et professionnalisme</div>
+                    <div class="action-card" data-action="comp1-1">
+                        <div class="action-header"><div class="action-icon">⏰</div><div class="action-text">Arriver à l'heure chaque jour</div></div>
+                        <div style="margin-top:15px;padding-left:85px;">
+                            <div class="checkbox-group">
+                                <label class="checkbox-item"><input type="checkbox" data-save="comp1-1-oui" onclick="uncheckOther(this,'comp1-1-non');hideConditional('comp1-1-conditional')"> Oui</label>
+                                <label class="checkbox-item"><input type="checkbox" data-save="comp1-1-non" onclick="uncheckOther(this,'comp1-1-oui');showConditional('comp1-1-conditional')"> Non</label>
+                            </div>
+                        </div>
+                        <div class="conditional-field" id="comp1-1-conditional">
+                            <label style="font-weight:600;color:var(--primary);display:block;margin-bottom:8px;">Nombre de retards :</label>
+                            <input type="text" placeholder="Ex: 2" data-save="comp1-1-retards">
+                        </div>
+                    </div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp1-2"><div class="action-header"><div class="action-icon">☕</div><div class="action-text">Respecter les horaires de pause</div><div class="custom-checkbox"></div></div></div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp1-3"><div class="action-header"><div class="action-icon">📞</div><div class="action-text">Prévenir en cas de retard ou absence</div><div class="custom-checkbox"></div></div></div>
+                    <div class="subsection-title">👔 Tenue professionnelle</div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp1-5"><div class="action-header"><div class="action-icon">🧼</div><div class="action-text">Avoir une bonne hygiène personnelle</div><div class="custom-checkbox"></div></div></div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp1-6"><div class="action-header"><div class="action-icon">👞</div><div class="action-text">Porter les chaussures réglementaires</div><div class="custom-checkbox"></div></div></div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp1-7"><div class="action-header"><div class="action-icon">💇</div><div class="action-text">Attacher les cheveux si nécessaire</div><div class="custom-checkbox"></div></div></div>
+                    <div class="action-card" data-action="comp1-4">
+                        <div class="action-header"><div class="action-icon">👕</div><div class="action-text">Ma tenue était :</div></div>
+                        <div class="emoji-rating">
+                            <div class="emoji-btn" onclick="selectEmoji(this,'comp1-4-tenue')">😊</div>
+                            <div class="emoji-btn" onclick="selectEmoji(this,'comp1-4-tenue')">😐</div>
+                            <div class="emoji-btn" onclick="selectEmoji(this,'comp1-4-tenue')">😕</div>
+                        </div>
+                        <div style="padding-left:85px;">
+                            <label class="photo-upload-btn">📸 Ajouter une photo<input type="file" accept="image/*" onchange="handlePhotoUpload(event,'comp1-4-tenue')"></label>
+                            <div class="photo-preview-container" id="photos-comp1-4-tenue"></div>
+                        </div>
+                    </div>
+                    <div class="subsection-title">💡 Curiosité et initiative</div>
+                    <div class="action-card" data-action="comp1-8">
+                        <div class="action-header"><div class="action-icon">❓</div><div class="action-text">Poser des questions pour mieux comprendre</div></div>
+                        <div style="margin-top:15px;padding-left:85px;"><div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp1-8-oui" onclick="uncheckOther(this,'comp1-8-pastoujours')"> Oui</label>
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp1-8-pastoujours" onclick="uncheckOther(this,'comp1-8-oui')"> Pas toujours</label>
+                        </div></div>
+                    </div>
+                    <div class="action-card" data-action="comp1-9">
+                        <div class="action-header"><div class="action-icon">💬</div><div class="action-text">Demander des conseils aux collègues</div></div>
+                        <div style="margin-top:15px;padding-left:85px;"><div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp1-9-oui" onclick="uncheckOther(this,'comp1-9-pasose')"> Oui</label>
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp1-9-pasose" onclick="uncheckOther(this,'comp1-9-oui')"> Je n'ai pas osé</label>
+                        </div></div>
+                    </div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp1-10"><div class="action-header"><div class="action-icon">🧹</div><div class="action-text">Faire des tâches sans attendre qu'on me le demande</div><div class="custom-checkbox"></div></div></div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp1-11"><div class="action-header"><div class="action-icon">🤝</div><div class="action-text">Proposer mon aide quand je vois que c'est nécessaire</div><div class="custom-checkbox"></div></div></div>
+                    <div class="subsection-title">⚡ Dynamisme et efficacité</div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp1-12"><div class="action-header"><div class="action-icon">⚡</div><div class="action-text">Être rapide dans mes actions</div><div class="custom-checkbox"></div></div></div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp1-13"><div class="action-header"><div class="action-icon">🏃</div><div class="action-text">Me déplacer de manière dynamique</div><div class="custom-checkbox"></div></div></div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp1-14"><div class="action-header"><div class="action-icon">🔄</div><div class="action-text">Garder un rythme soutenu pendant le service</div><div class="custom-checkbox"></div></div></div>
+                    <div class="subsection-title">😊 Attitude professionnelle</div>
+                    <div class="action-card" data-action="comp1-15">
+                        <div class="action-header"><div class="action-icon">👂</div><div class="action-text">Accepter les remarques sans être vexé(e)</div></div>
+                        <div style="margin-top:15px;padding-left:85px;"><div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp1-15-oui" onclick="uncheckOther(this,'comp1-15-pastoujours')"> Oui</label>
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp1-15-pastoujours" onclick="uncheckOther(this,'comp1-15-oui')"> Pas toujours</label>
+                        </div></div>
+                    </div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp1-16"><div class="action-header"><div class="action-icon">✅</div><div class="action-text">Appliquer les corrections demandées</div><div class="custom-checkbox"></div></div></div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp1-18"><div class="action-header"><div class="action-icon">🤫</div><div class="action-text">Garder mon calme et ma discrétion</div><div class="custom-checkbox"></div></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPÉTENCE 2 -->
+        <div class="competence-section">
+            <div class="competence-header" onclick="toggleCompetence(2)">
+                <div class="competence-number">2</div>
+                <div class="competence-title"><h3>Réapprovisionner</h3></div>
+                <div class="toggle-icon" id="toggle2">▼</div>
+            </div>
+            <div class="competence-content" id="comp2-content">
+                <div class="action-grid">
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp2-1"><div class="action-header"><div class="action-icon">🧊</div><div class="action-text">Nettoyer les frigos du bar</div><div class="custom-checkbox"></div></div></div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp2-2"><div class="action-header"><div class="action-icon">🔢</div><div class="action-text">Compter les stocks</div><div class="custom-checkbox"></div></div></div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp2-3"><div class="action-header"><div class="action-icon">🥤</div><div class="action-text">Remplir les frigos du bar (boissons)</div><div class="custom-checkbox"></div></div></div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp2-4"><div class="action-header"><div class="action-icon">📅</div><div class="action-text">Vérifier les dates de péremption</div><div class="custom-checkbox"></div></div></div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp2-5"><div class="action-header"><div class="action-icon">🍹</div><div class="action-text">Réapprovisionner la mise en place du bar</div><div class="custom-checkbox"></div></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPÉTENCE 3 -->
+        <div class="competence-section">
+            <div class="competence-header" onclick="toggleCompetence(3)">
+                <div class="competence-number">3</div>
+                <div class="competence-title"><h3>Organisation de la salle</h3></div>
+                <div class="toggle-icon" id="toggle3">▼</div>
+            </div>
+            <div class="competence-content" id="comp3-content">
+                <div class="action-grid">
+                    <div class="subsection-title">🧹 Entretien des locaux et du matériel</div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp3-1"><div class="action-header"><div class="action-icon">🧹</div><div class="action-text">Aspirer la salle</div><div class="custom-checkbox"></div></div></div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp3-2"><div class="action-header"><div class="action-icon">💧</div><div class="action-text">Laver les sols</div><div class="custom-checkbox"></div></div></div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp3-3"><div class="action-header"><div class="action-icon">✨</div><div class="action-text">Dépoussiérer (tables, chaises, mobilier)</div><div class="custom-checkbox"></div></div></div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp3-4"><div class="action-header"><div class="action-icon">🍴</div><div class="action-text">Passer au vinaigre le matériel de mise en place</div><div class="custom-checkbox"></div></div></div>
+                    <div class="subsection-title">🪑 Préparation de la salle</div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp3-5"><div class="action-header"><div class="action-icon">🪑</div><div class="action-text">Préparer la carcasse</div><div class="custom-checkbox"></div></div></div>
+                    <div class="subsection-title">🍽️ Mises en place</div>
+                    <div class="action-card" data-action="comp3-6">
+                        <div class="action-header"><div class="action-icon">🍽️</div><div class="action-text">Effectuer les mises en place avant l'arrivée du client</div></div>
+                        <div style="margin-top:15px;padding-left:85px;">
+                            <div class="checkbox-group"><label class="checkbox-item"><input type="checkbox" data-save="comp3-6-oui"> Oui</label></div>
+                            <label style="font-weight:600;color:var(--primary);display:block;margin-top:10px;margin-bottom:8px;">Préciser :</label>
+                            <input type="text" placeholder="Ex: mise en place à la carte, banquet..." data-save="comp3-6-preciser" style="width:100%;max-width:400px;padding:10px;border:2px solid #E0E0E0;border-radius:8px;font-family:'Nunito',sans-serif;">
+                        </div>
+                    </div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp3-7"><div class="action-header"><div class="action-icon">🛒</div><div class="action-text">Organiser les consoles de service</div><div class="custom-checkbox"></div></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPÉTENCE 4 -->
+        <div class="competence-section">
+            <div class="competence-header" onclick="toggleCompetence(4)">
+                <div class="competence-number">4</div>
+                <div class="competence-title"><h3>Accueillir et prendre en charge le client</h3></div>
+                <div class="toggle-icon" id="toggle4">▼</div>
+            </div>
+            <div class="competence-content" id="comp4-content">
+                <div class="action-grid">
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp4-1"><div class="action-header"><div class="action-icon">👋</div><div class="action-text">Accueillir et saluer le client</div><div class="custom-checkbox"></div></div></div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp4-2"><div class="action-header"><div class="action-icon">🪑</div><div class="action-text">L'installer à sa table</div><div class="custom-checkbox"></div></div></div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp4-3"><div class="action-header"><div class="action-icon">📖</div><div class="action-text">Présenter la carte ou l'ardoise</div><div class="custom-checkbox"></div></div></div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp4-4"><div class="action-header"><div class="action-icon">💬</div><div class="action-text">Renseigner ou conseiller sur la carte</div><div class="custom-checkbox"></div></div></div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp4-5"><div class="action-header"><div class="action-icon">🌟</div><div class="action-text">Proposer des ventes (eaux, desserts)</div><div class="custom-checkbox"></div></div></div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp4-6"><div class="action-header"><div class="action-icon">📝</div><div class="action-text">Prendre une commande</div><div class="custom-checkbox"></div></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPÉTENCE 5 -->
+        <div class="competence-section">
+            <div class="competence-header" onclick="toggleCompetence(5)">
+                <div class="competence-number">5</div>
+                <div class="competence-title"><h3>Le service</h3></div>
+                <div class="toggle-icon" id="toggle5">▼</div>
+            </div>
+            <div class="competence-content" id="comp5-content">
+                <div class="action-grid">
+                    <div class="action-card" data-action="comp5-1">
+                        <div class="action-header"><div class="action-icon">😊</div><div class="action-text">Mon ressenti lors de l'accueil des clients</div></div>
+                        <div class="emoji-rating">
+                            <div class="emoji-btn" onclick="selectEmoji(this,'comp5-1-accueil')">😊</div>
+                            <div class="emoji-btn" onclick="selectEmoji(this,'comp5-1-accueil')">😐</div>
+                            <div class="emoji-btn" onclick="selectEmoji(this,'comp5-1-accueil')">😕</div>
+                        </div>
+                    </div>
+                    <div class="action-card" data-action="comp5-2">
+                        <div class="action-header"><div class="action-icon">📝</div><div class="action-text">Prendre des commandes simples</div></div>
+                        <div style="margin-top:15px;padding-left:85px;"><div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp5-2-non" onclick="uncheckOther(this,'comp5-2-oui');hideConditional('comp5-2-conditional');event.stopPropagation()"> Non</label>
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp5-2-oui" onclick="uncheckOther(this,'comp5-2-non');showConditional('comp5-2-conditional');event.stopPropagation()"> Oui</label>
+                        </div></div>
+                        <div class="conditional-field" id="comp5-2-conditional">
+                            <label style="font-weight:600;color:var(--primary);display:block;margin-bottom:8px;">Avec quel outil :</label>
+                            <input type="text" placeholder="Ex: carnet de bon, tablette..." data-save="comp5-2-outil">
+                        </div>
+                    </div>
+                    <div class="action-card" data-action="comp5-3">
+                        <div class="action-header"><div class="action-icon">🥤</div><div class="action-text">Service des boissons</div></div>
+                        <div style="margin-top:15px;padding-left:85px;"><div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp5-3-non" onclick="uncheckOther(this,'comp5-3-oui');hideConditional('comp5-3-conditional');event.stopPropagation()"> Non</label>
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp5-3-oui" onclick="uncheckOther(this,'comp5-3-non');showConditional('comp5-3-conditional');event.stopPropagation()"> Oui</label>
+                        </div></div>
+                        <div class="conditional-field" id="comp5-3-conditional">
+                            <label style="font-weight:600;color:var(--primary);display:block;margin-bottom:8px;">Quelques boissons servies :</label>
+                            <input type="text" placeholder="Ex: eau, vin, coca..." data-save="comp5-3-boissons">
+                        </div>
+                    </div>
+                    <div class="action-card" data-action="comp5-4">
+                        <div class="action-header"><div class="action-icon">🍽️</div><div class="action-text">Service à l'assiette / Service au plat</div></div>
+                        <div style="margin-top:15px;padding-left:85px;">
+                            <div class="checkbox-group">
+                                <label class="checkbox-item"><input type="checkbox" data-save="comp5-4-oui" onclick="uncheckOther(this,'comp5-4-non');event.stopPropagation()"> Oui</label>
+                                <label class="checkbox-item"><input type="checkbox" data-save="comp5-4-non" onclick="uncheckOther(this,'comp5-4-oui');event.stopPropagation()"> Non</label>
+                            </div>
+                            <label style="font-weight:600;color:var(--primary);display:block;margin-top:10px;margin-bottom:8px;">Combien d'assiettes :</label>
+                            <input type="text" placeholder="Ex: 2" data-save="comp5-4-assiettes" style="width:100%;max-width:200px;padding:10px;border:2px solid #E0E0E0;border-radius:8px;font-family:'Nunito',sans-serif;">
+                        </div>
+                    </div>
+                    <div class="action-card" data-action="comp5-5">
+                        <div class="action-header"><div class="action-icon">🍴</div><div class="action-text">Débarrasser les tables</div></div>
+                        <div style="margin-top:15px;padding-left:85px;"><div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp5-5-pro" onclick="uncheckOther(this,'comp5-5-impro');event.stopPropagation()"> De manière professionnelle</label>
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp5-5-impro" onclick="uncheckOther(this,'comp5-5-pro');event.stopPropagation()"> J'ai plutôt improvisé</label>
+                        </div></div>
+                    </div>
+                    <div class="action-card" onclick="toggleAction(this)" data-action="comp5-7"><div class="action-header"><div class="action-icon">🍞</div><div class="action-text">Proposer/servir le pain</div><div class="custom-checkbox"></div></div></div>
+                    <div class="action-card" data-action="comp5-8">
+                        <div class="action-header"><div class="action-icon">🌟</div><div class="action-text">Proposer des ventes additionnelles (desserts, cafés)</div></div>
+                        <div style="margin-top:15px;padding-left:85px;">
+                            <div class="checkbox-group"><label class="checkbox-item"><input type="checkbox" data-save="comp5-8-oui" onclick="event.stopPropagation()"> Oui</label></div>
+                            <label style="font-weight:600;color:var(--primary);display:block;margin-top:10px;margin-bottom:8px;">Lesquelles :</label>
+                            <input type="text" placeholder="Ex: eau, vin, café, desserts..." data-save="comp5-8-lesquelles" style="width:100%;max-width:400px;padding:10px;border:2px solid #E0E0E0;border-radius:8px;font-family:'Nunito',sans-serif;">
+                        </div>
+                    </div>
+                    <div class="action-card" data-action="comp5-10">
+                        <div class="action-header"><div class="action-icon">🎯</div><div class="action-text">Gérer plusieurs tables en même temps</div></div>
+                        <div class="emoji-rating">
+                            <div class="emoji-btn" onclick="selectEmoji(this,'comp5-10-tables')">😊</div>
+                            <div class="emoji-btn" onclick="selectEmoji(this,'comp5-10-tables')">😐</div>
+                            <div class="emoji-btn" onclick="selectEmoji(this,'comp5-10-tables')">😕</div>
+                        </div>
+                    </div>
+                    <div class="action-card" data-action="comp5-13">
+                        <div class="action-header"><div class="action-icon">💳</div><div class="action-text">Facturation et encaissement</div></div>
+                        <div style="margin-top:15px;padding-left:85px;">
+                            <div class="checkbox-group">
+                                <label class="checkbox-item"><input type="checkbox" data-save="comp5-13-fait-oui" onclick="uncheckOther(this,'comp5-13-fait-non');showConditional('comp5-13-conditional');event.stopPropagation()"> Oui</label>
+                                <label class="checkbox-item"><input type="checkbox" data-save="comp5-13-fait-non" onclick="uncheckOther(this,'comp5-13-fait-oui');hideConditional('comp5-13-conditional');event.stopPropagation()"> Non</label>
+                            </div>
+                        </div>
+                        <div class="conditional-field" id="comp5-13-conditional">
+                            <label style="font-weight:600;color:var(--primary);display:block;margin-bottom:10px;">Moyen de paiement :</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item"><input type="checkbox" data-save="comp5-13-cb" onclick="event.stopPropagation()"> CB</label>
+                                <label class="checkbox-item"><input type="checkbox" data-save="comp5-13-especes" onclick="event.stopPropagation()"> Espèces</label>
+                                <label class="checkbox-item"><input type="checkbox" data-save="comp5-13-ticket" onclick="event.stopPropagation()"> Ticket restaurant</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="subsection-title">🧹 Fin de service</div>
+                    <div class="action-card" data-action="comp5-14">
+                        <div class="action-header"><div class="action-icon">🧹</div><div class="action-text">Nettoyer les locaux</div></div>
+                        <div style="margin-top:15px;padding-left:85px;"><div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp5-14-oui" onclick="uncheckOther(this,'comp5-14-non');event.stopPropagation()"> Oui</label>
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp5-14-non" onclick="uncheckOther(this,'comp5-14-oui');event.stopPropagation()"> Non</label>
+                        </div></div>
+                    </div>
+                    <div class="action-card" data-action="comp5-15">
+                        <div class="action-header"><div class="action-icon">✨</div><div class="action-text">Préparer la salle pour le service suivant</div></div>
+                        <div style="margin-top:15px;padding-left:85px;"><div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp5-15-oui" onclick="uncheckOther(this,'comp5-15-non');event.stopPropagation()"> Oui</label>
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp5-15-non" onclick="uncheckOther(this,'comp5-15-oui');event.stopPropagation()"> Non</label>
+                        </div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPÉTENCE 6 -->
+        <div class="competence-section">
+            <div class="competence-header" onclick="toggleCompetence(6)">
+                <div class="competence-number">6</div>
+                <div class="competence-title"><h3>Poste au bar</h3></div>
+                <div class="toggle-icon" id="toggle6">▼</div>
+            </div>
+            <div class="competence-content" id="comp6-content">
+                <div class="action-grid">
+                    <div class="action-card" data-action="comp6-1">
+                        <div class="action-header"><div class="action-icon">🧹</div><div class="action-text">Nettoyer les surfaces, le matériel, les appareils</div></div>
+                        <div style="margin-top:15px;padding-left:85px;"><div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp6-1-oui" onclick="uncheckOther(this,'comp6-1-non');showConditional('comp6-1-conditional');event.stopPropagation()"> Oui</label>
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp6-1-non" onclick="uncheckOther(this,'comp6-1-oui');hideConditional('comp6-1-conditional');event.stopPropagation()"> Non</label>
+                        </div></div>
+                        <div class="conditional-field" id="comp6-1-conditional">
+                            <label style="font-weight:600;color:var(--primary);display:block;margin-bottom:8px;">Exemples de matériel nettoyé :</label>
+                            <input type="text" placeholder="Ex: blender, verres, plan de travail..." data-save="comp6-1-materiel" style="width:100%;padding:10px;border:2px solid #E0E0E0;border-radius:8px;font-family:'Nunito',sans-serif;">
+                        </div>
+                    </div>
+                    <div class="action-card" data-action="comp6-3">
+                        <div class="action-header"><div class="action-icon">🍸</div><div class="action-text">Préparer des apéritifs</div></div>
+                        <div style="margin-top:15px;padding-left:85px;"><div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp6-3-oui" onclick="uncheckOther(this,'comp6-3-non');showConditional('comp6-3-conditional');event.stopPropagation()"> Oui</label>
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp6-3-non" onclick="uncheckOther(this,'comp6-3-oui');hideConditional('comp6-3-conditional');event.stopPropagation()"> Non</label>
+                        </div></div>
+                        <div class="conditional-field" id="comp6-3-conditional">
+                            <label style="font-weight:600;color:var(--primary);display:block;margin-bottom:8px;">Lesquels :</label>
+                            <input type="text" placeholder="Ex: martini, kir, pastis..." data-save="comp6-3-lesquels" style="width:100%;padding:10px;border:2px solid #E0E0E0;border-radius:8px;font-family:'Nunito',sans-serif;">
+                        </div>
+                    </div>
+                    <div class="action-card" data-action="comp6-4">
+                        <div class="action-header"><div class="action-icon">🍹</div><div class="action-text">Préparer des cocktails</div></div>
+                        <div style="margin-top:15px;padding-left:85px;"><div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp6-4-oui" onclick="uncheckOther(this,'comp6-4-non');showConditional('comp6-4-conditional');event.stopPropagation()"> Oui</label>
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp6-4-non" onclick="uncheckOther(this,'comp6-4-oui');hideConditional('comp6-4-conditional');event.stopPropagation()"> Non</label>
+                        </div></div>
+                        <div class="conditional-field" id="comp6-4-conditional">
+                            <label style="font-weight:600;color:var(--primary);display:block;margin-bottom:8px;">Lesquels :</label>
+                            <input type="text" placeholder="Ex: mojito, pina colada..." data-save="comp6-4-lesquels" style="width:100%;padding:10px;border:2px solid #E0E0E0;border-radius:8px;font-family:'Nunito',sans-serif;">
+                        </div>
+                    </div>
+                    <div class="action-card" data-action="comp6-5">
+                        <div class="action-header"><div class="action-icon">☕</div><div class="action-text">Réaliser des boissons chaudes</div></div>
+                        <div style="margin-top:15px;padding-left:85px;"><div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp6-5-oui" onclick="uncheckOther(this,'comp6-5-non');showConditional('comp6-5-conditional');event.stopPropagation()"> Oui</label>
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp6-5-non" onclick="uncheckOther(this,'comp6-5-oui');hideConditional('comp6-5-conditional');event.stopPropagation()"> Non</label>
+                        </div></div>
+                        <div class="conditional-field" id="comp6-5-conditional">
+                            <label style="font-weight:600;color:var(--primary);display:block;margin-bottom:8px;">Lesquelles :</label>
+                            <input type="text" placeholder="Ex: café, thé, chocolat chaud..." data-save="comp6-5-lesquelles" style="width:100%;padding:10px;border:2px solid #E0E0E0;border-radius:8px;font-family:'Nunito',sans-serif;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPÉTENCE 7 -->
+        <div class="competence-section">
+            <div class="competence-header" onclick="toggleCompetence(7)">
+                <div class="competence-number">7</div>
+                <div class="competence-title"><h3>Procédures environnementales</h3></div>
+                <div class="toggle-icon" id="toggle7">▼</div>
+            </div>
+            <div class="competence-content" id="comp7-content">
+                <div class="action-grid">
+                    <div class="action-card" data-action="comp7-1">
+                        <div class="action-header"><div class="action-icon">♻️</div><div class="action-text">J'ai trié les déchets correctement</div></div>
+                        <div style="margin-top:15px;padding-left:85px;"><div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp7-1-oui" onclick="uncheckOther(this,'comp7-1-parfois','comp7-1-non');event.stopPropagation()"> Oui</label>
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp7-1-parfois" onclick="uncheckOther(this,'comp7-1-oui','comp7-1-non');event.stopPropagation()"> Parfois</label>
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp7-1-non" onclick="uncheckOther(this,'comp7-1-oui','comp7-1-parfois');event.stopPropagation()"> Non</label>
+                        </div></div>
+                    </div>
+                    <div class="action-card" data-action="comp7-2">
+                        <div class="action-header"><div class="action-icon">💧</div><div class="action-text">J'ai fait attention à l'économie d'eau et d'énergie</div></div>
+                        <div style="margin-top:15px;padding-left:85px;"><div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp7-2-oui" onclick="uncheckOther(this,'comp7-2-pastoujours');event.stopPropagation()"> Oui</label>
+                            <label class="checkbox-item"><input type="checkbox" data-save="comp7-2-pastoujours" onclick="uncheckOther(this,'comp7-2-oui');event.stopPropagation()"> Pas toujours</label>
+                        </div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESSENTI PERSONNEL -->
+        <div class="competence-section" style="border-color:var(--primary);">
+            <div class="competence-header" onclick="toggleCompetence(8)">
+                <div class="competence-number" style="background:linear-gradient(135deg,var(--primary),#E74C3C);">💭</div>
+                <div class="competence-title"><h3>Mon ressenti personnel</h3></div>
+                <div class="toggle-icon" id="toggle8">▼</div>
+            </div>
+            <div class="competence-content" id="comp8-content">
+                <div class="action-grid">
+                    <div class="action-card" data-action="comp8-1">
+                        <div class="action-header"><div class="action-icon">⭐</div><div class="action-text">Ce que j'ai préféré pendant mon stage</div></div>
+                        <div style="margin-top:15px;padding-left:85px;">
+                            <div class="checkbox-group" style="flex-direction:column;align-items:flex-start;">
+                                <label class="checkbox-item"><input type="checkbox" data-save="comp8-1-service" onclick="event.stopPropagation()"> Le service en salle</label>
+                                <label class="checkbox-item"><input type="checkbox" data-save="comp8-1-bar" onclick="event.stopPropagation()"> Le travail au bar</label>
+                                <label class="checkbox-item"><input type="checkbox" data-save="comp8-1-clients" onclick="event.stopPropagation()"> Le contact avec les clients</label>
+                                <label class="checkbox-item"><input type="checkbox" data-save="comp8-1-equipe" onclick="event.stopPropagation()"> Le travail en équipe</label>
+                                <label class="checkbox-item"><input type="checkbox" data-save="comp8-1-mep" onclick="event.stopPropagation()"> La mise en place</label>
+                            </div>
+                            <input type="text" placeholder="Autre..." data-save="comp8-1-autre" style="width:100%;max-width:400px;padding:10px;border:2px solid #E0E0E0;border-radius:8px;font-family:'Nunito',sans-serif;margin-top:10px;">
+                        </div>
+                    </div>
+                    <div class="action-card" data-action="comp8-3">
+                        <div class="action-header"><div class="action-icon">💡</div><div class="action-text">Ce stage m'a donné envie de continuer en restauration</div></div>
+                        <div style="margin-top:15px;padding-left:85px;">
+                            <div class="checkbox-group" style="flex-direction:column;align-items:flex-start;">
+                                <label class="checkbox-item"><input type="checkbox" data-save="comp8-3-ouivraiment" onclick="uncheckOther(this,'comp8-3-ouihesite','comp8-3-nonpas','comp8-3-nonailleur');event.stopPropagation()"> Oui, vraiment !</label>
+                                <label class="checkbox-item"><input type="checkbox" data-save="comp8-3-ouihesite" onclick="uncheckOther(this,'comp8-3-ouivraiment','comp8-3-nonpas','comp8-3-nonailleur');event.stopPropagation()"> Oui, mais j'hésite</label>
+                                <label class="checkbox-item"><input type="checkbox" data-save="comp8-3-nonpas" onclick="uncheckOther(this,'comp8-3-ouivraiment','comp8-3-ouihesite','comp8-3-nonailleur');event.stopPropagation()"> Non, pas vraiment</label>
+                                <label class="checkbox-item"><input type="checkbox" data-save="comp8-3-nonailleur" onclick="uncheckOther(this,'comp8-3-ouivraiment','comp8-3-ouihesite','comp8-3-nonpas');event.stopPropagation()"> Non, je vais m'orienter ailleurs</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="action-card" data-action="comp8-4">
+                        <div class="action-header"><div class="action-icon">📚</div><div class="action-text">Ce que j'ai appris de plus important</div></div>
+                        <div style="margin-top:15px;padding-left:85px;">
+                            <textarea placeholder="Écris ici ce que tu as appris..." data-save="comp8-4-appris" style="width:100%;padding:12px;border:2px solid #E0E0E0;border-radius:8px;font-family:'Nunito',sans-serif;min-height:80px;resize:vertical;"></textarea>
+                        </div>
+                    </div>
+                    <div class="action-card" data-action="comp8-5">
+                        <div class="action-header"><div class="action-icon">🌟</div><div class="action-text">Un mot pour décrire mon expérience</div></div>
+                        <div style="margin-top:15px;padding-left:85px;">
+                            <input type="text" placeholder="Un seul mot..." data-save="comp8-5-mot" style="width:100%;max-width:300px;padding:12px;border:2px solid #E0E0E0;border-radius:8px;font-family:'Nunito',sans-serif;font-size:1.1em;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="save-btn" onclick="saveData()">💾 Sauvegarder mon livret</button>
+    </div>
+
+    <script>
+        let eleveId = null;
+        let saveTimer = null;
+
+        // Vérification de la session
+        window.addEventListener('DOMContentLoaded', async () => {
+            eleveId = sessionStorage.getItem('eleveId');
+            const nom = sessionStorage.getItem('eleveNom');
+
+            if (!eleveId) {
+                window.location.href = '/';
+                return;
+            }
+
+            document.getElementById('userInfo').textContent = '👤 ' + (nom || eleveId);
+
+            // Charger les données depuis le serveur
+            await loadData();
+
+            // Écouter les modifications pour sauvegarder automatiquement
+            document.addEventListener('input', () => scheduleSave());
+        });
+
+        function scheduleSave() {
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => autoSave(), 2000); // sauvegarde 2s après la dernière frappe
+        }
+
+        function toggleCompetence(compNum) {
+            const content = document.getElementById(`comp${compNum}-content`);
+            const toggle = document.getElementById(`toggle${compNum}`);
+            content.classList.toggle('collapsed');
+            toggle.style.transform = content.classList.contains('collapsed') ? 'rotate(-90deg)' : 'rotate(0deg)';
+        }
+
+        function toggleAction(element) {
+            element.classList.toggle('checked');
+            scheduleSave();
+        }
+
+        function selectEmoji(element, saveKey) {
+            const parent = element.parentElement;
+            parent.querySelectorAll('.emoji-btn').forEach(btn => btn.classList.remove('selected'));
+            element.classList.add('selected');
+            scheduleSave();
+        }
+
+        function uncheckOther(checkbox, ...otherDataSaves) {
+            if (checkbox.checked) {
+                otherDataSaves.forEach(ds => {
+                    const el = document.querySelector(`[data-save="${ds}"]`);
+                    if (el) el.checked = false;
+                });
+            }
+            scheduleSave();
+        }
+
+        function showConditional(id) {
+            const f = document.getElementById(id);
+            if (f) f.classList.add('show');
+        }
+
+        function hideConditional(id) {
+            const f = document.getElementById(id);
+            if (f) f.classList.remove('show');
+        }
+
+        function handlePhotoUpload(event, containerId) {
+            const files = event.target.files;
+            const container = document.getElementById(`photos-${containerId}`);
+            if (!container) return;
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        const photoDiv = document.createElement('div');
+                        photoDiv.className = 'photo-preview';
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        const del = document.createElement('div');
+                        del.className = 'photo-delete';
+                        del.textContent = '×';
+                        del.onclick = () => { photoDiv.remove(); scheduleSave(); };
+                        photoDiv.appendChild(img);
+                        photoDiv.appendChild(del);
+                        container.appendChild(photoDiv);
+                        scheduleSave();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            event.target.value = '';
+        }
+
+        function collectData() {
+            const data = { inputs: {}, actions: {}, emojis: {}, photos: {} };
+
+            document.querySelectorAll('[data-save]').forEach(input => {
+                if (input.type === 'checkbox') data.inputs[input.dataset.save] = input.checked;
+                else if (input.type === 'radio') { if (input.checked) data.inputs[input.dataset.save] = input.value; }
+                else data.inputs[input.dataset.save] = input.value;
+            });
+
+            document.querySelectorAll('.action-card.checked').forEach(card => {
+                if (card.dataset.action) data.actions[card.dataset.action] = true;
+            });
+
+            document.querySelectorAll('.emoji-btn.selected').forEach(btn => {
+                const parent = btn.parentElement;
+                const index = Array.from(parent.children).indexOf(btn);
+                const onclick = btn.getAttribute('onclick');
+                const match = onclick && onclick.match(/['"]([\w-]+)['"]/g);
+                if (match && match.length >= 2) {
+                    const key = match[1].replace(/['"]/g, '');
+                    data.emojis[key] = index;
+                }
+            });
+
+            document.querySelectorAll('.photo-preview-container').forEach(container => {
+                const photos = [];
+                container.querySelectorAll('img').forEach(img => photos.push(img.src));
+                if (photos.length > 0) data.photos[container.id] = photos;
+            });
+
+            return data;
+        }
+
+        async function autoSave() {
+            if (!eleveId) return;
+            const livret = collectData();
+            try {
+                const res = await fetch(`/api/save/${eleveId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ livret })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    const d = new Date(result.lastSaved);
+                    document.getElementById('saveStatus').textContent = `✅ Sauvegardé à ${d.toLocaleTimeString('fr-FR')}`;
+                    document.getElementById('saveStatus').className = 'save-status saved';
+                }
+            } catch {
+                document.getElementById('saveStatus').textContent = '⚠️ Erreur de sauvegarde';
+            }
+        }
+
+        async function saveData() {
+            document.getElementById('saveStatus').textContent = '⏳ Sauvegarde en cours...';
+            document.getElementById('saveStatus').className = 'save-status';
+            await autoSave();
+        }
+
+        async function loadData() {
+            try {
+                const res = await fetch(`/api/load/${eleveId}`);
+                const result = await res.json();
+                if (result.success && result.livret) {
+                    restoreData(result.livret);
+                    if (result.lastSaved) {
+                        const d = new Date(result.lastSaved);
+                        document.getElementById('saveStatus').textContent = `✅ Dernière sauvegarde : ${d.toLocaleDateString('fr-FR')} à ${d.toLocaleTimeString('fr-FR')}`;
+                        document.getElementById('saveStatus').className = 'save-status saved';
+                    } else {
+                        document.getElementById('saveStatus').textContent = '📝 Nouveau livret - commencez à remplir !';
+                    }
+                }
+            } catch {
+                document.getElementById('saveStatus').textContent = '⚠️ Impossible de charger vos données';
+            }
+        }
+
+        function restoreData(data) {
+            if (data.inputs) {
+                Object.entries(data.inputs).forEach(([key, value]) => {
+                    const inputs = document.querySelectorAll(`[data-save="${key}"]`);
+                    inputs.forEach(input => {
+                        if (input.type === 'checkbox') input.checked = value;
+                        else if (input.type === 'radio') { if (input.value === value) input.checked = true; }
+                        else input.value = value;
+                    });
+                });
+                // Gestion champs conditionnels
+                if (data.inputs['comp1-1-non']) showConditional('comp1-1-conditional');
+                if (data.inputs['comp5-2-oui']) showConditional('comp5-2-conditional');
+                if (data.inputs['comp5-3-oui']) showConditional('comp5-3-conditional');
+                if (data.inputs['comp5-13-fait-oui']) showConditional('comp5-13-conditional');
+                if (data.inputs['comp6-1-oui']) showConditional('comp6-1-conditional');
+                if (data.inputs['comp6-3-oui']) showConditional('comp6-3-conditional');
+                if (data.inputs['comp6-4-oui']) showConditional('comp6-4-conditional');
+                if (data.inputs['comp6-5-oui']) showConditional('comp6-5-conditional');
+            }
+            if (data.actions) {
+                Object.entries(data.actions).forEach(([actionId, checked]) => {
+                    const card = document.querySelector(`[data-action="${actionId}"]`);
+                    if (card && checked) card.classList.add('checked');
+                });
+            }
+            if (data.emojis) {
+                Object.entries(data.emojis).forEach(([key, index]) => {
+                    document.querySelectorAll('.emoji-rating').forEach(container => {
+                        const btns = container.querySelectorAll('.emoji-btn');
+                        btns.forEach((btn, i) => {
+                            const onclick = btn.getAttribute('onclick');
+                            if (onclick && onclick.includes(`'${key}'`) && i === index) {
+                                btn.classList.add('selected');
+                            }
+                        });
+                    });
+                });
+            }
+            if (data.photos) {
+                Object.entries(data.photos).forEach(([containerId, photos]) => {
+                    const container = document.getElementById(containerId);
+                    if (container) {
+                        photos.forEach(src => {
+                            const photoDiv = document.createElement('div');
+                            photoDiv.className = 'photo-preview';
+                            const img = document.createElement('img');
+                            img.src = src;
+                            const del = document.createElement('div');
+                            del.className = 'photo-delete';
+                            del.textContent = '×';
+                            del.onclick = () => { photoDiv.remove(); scheduleSave(); };
+                            photoDiv.appendChild(img);
+                            photoDiv.appendChild(del);
+                            container.appendChild(photoDiv);
+                        });
+                    }
+                });
+            }
+        }
+
+        function deconnexion() {
+            sessionStorage.clear();
+            window.location.href = '/';
+        }
+
+        window.addEventListener('beforeunload', () => {
+            if (eleveId) {
+                const livret = collectData();
+                navigator.sendBeacon(`/api/save/${eleveId}`, JSON.stringify({ livret }));
+            }
+        });
+    </script>
+</body>
+</html>
